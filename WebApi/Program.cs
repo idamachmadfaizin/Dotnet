@@ -1,14 +1,24 @@
+using App.Model.Entities;
+using Database.Context;
 using FastEndpoints.Security;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services
     .AddAuthenticationJwtBearer(o => o.SigningKey = builder.Configuration["Auth:SigningKey"])
     .AddAuthorization()
     .AddFastEndpoints()
-    .AddResponseCaching();
+    .AddResponseCaching()
+    .AddDbContext<AppDbContext>();
+
+builder.Services.Configure<IdentityOptions>(builder.Configuration.GetSection("Auth:IdentityOptions"));
+
+builder.Services
+    .AddIdentityApiEndpoints<User>()
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
 
 if (!builder.Environment.IsProduction())
-{
     builder.Services.SwaggerDocument(o =>
     {
         o.DocumentSettings = settings =>
@@ -18,7 +28,6 @@ if (!builder.Environment.IsProduction())
         };
         o.FlattenSchema = true;
     });
-}
 
 var app = builder.Build();
 app.UseAuthentication()
@@ -29,9 +38,10 @@ app.UseAuthentication()
 if (!app.Environment.IsProduction())
 {
     app.UseSwaggerGen(uiConfig: settings => settings.DeActivateTryItOut());
+    app.MapGet("/", () => Results.Redirect("/swagger"))
+        .ExcludeFromDescription();
 }
 
-app.MapGet("/", () => Results.Redirect("/swagger"))
-    .ExcludeFromDescription();
+app.MapIdentityApi<User>();
 
 app.Run();
