@@ -30,7 +30,8 @@ if (!builder.Environment.IsProduction())
     });
 
 var app = builder.Build();
-app.UseAuthentication()
+app.UseDbSeed(args)
+    .UseAuthentication()
     .UseAuthorization()
     .UseDefaultExceptionHandler()
     .UseFastEndpoints(config => config.Errors.UseProblemDetails());
