@@ -1,5 +1,6 @@
 using App.Model.Entities;
 using Database.Context;
+using Database.Seeders;
 using FastEndpoints.Security;
 using Microsoft.AspNetCore.Identity;
 
@@ -30,7 +31,7 @@ if (!builder.Environment.IsProduction())
     });
 
 var app = builder.Build();
-app.UseDbSeed(args)
+app.UseDbSeed<DatabaseSeeder>(args)
     .UseAuthentication()
     .UseAuthorization()
     .UseDefaultExceptionHandler()

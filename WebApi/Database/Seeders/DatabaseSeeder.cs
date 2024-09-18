@@ -1,11 +1,14 @@
 using Database.Context;
+using Database.Factories;
+using Libs;
 
 namespace Database.Seeders;
 
-public class DatabaseSeeder : Seeder
+internal class DatabaseSeeder : Seeder
 {
-    public DatabaseSeeder(AppDbContext dbContext) : base(dbContext)
+    public DatabaseSeeder(AppDbContext dbContext, IServiceProvider serviceProvider) : base(serviceProvider)
     {
+        dbContext.AddRange(Create<RoleFactory>().Generate(2));
         dbContext.SaveChanges();
     }
 }

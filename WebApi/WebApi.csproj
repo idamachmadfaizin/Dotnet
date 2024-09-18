@@ -23,7 +23,11 @@
 
   <ItemGroup>
     <Folder Include="App\Enums\" />
-    <Folder Include="App\Features\" />
+    <Folder Include="App\Extensions\"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Libs\Libs.csproj"/>
   </ItemGroup>
 
 </Project>
