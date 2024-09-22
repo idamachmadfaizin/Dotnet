@@ -1,8 +1,8 @@
-using App.Model.Entities;
 using Database.Context;
 using Database.Seeders;
 using FastEndpoints.Security;
 using Microsoft.AspNetCore.Identity;
+using Model.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services

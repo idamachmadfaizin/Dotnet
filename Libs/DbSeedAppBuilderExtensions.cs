@@ -10,24 +10,41 @@ public static class DbSeedAppBuilderExtensions
         where T : Seeder
     {
         var seed = args.Any(arg => arg == "seed");
-
         if (!seed) return builder;
 
         using var scope = builder.ApplicationServices.CreateScope();
 
-        var type = typeof(T);
-
-        var constructor = type.GetConstructors().MaxBy(c => c.GetParameters().Length);
-        if (constructor is null) throw new InvalidOperationException("No constructor found for the given type.");
-
-        var parameters = constructor.GetParameters()
-            .Select(p => scope.ServiceProvider.GetRequiredService(p.ParameterType))
-            .ToArray();
-
-        var seederService = constructor.Invoke(parameters);
+        var seederService = Create(typeof(T), scope);
 
         if (seederService is not T) throw new InvalidOperationException("No factory found for the given type.");
 
         return builder;
+    }
+
+    private static object Create(Type type, IServiceScope scope)
+    {
+        var constructor = type.GetConstructors().MaxBy(c => c.GetParameters().Length);
+        if (constructor is null)
+            throw new InvalidOperationException($"No constructor found for the given type: .{type.Name}");
+
+        var parameters = constructor.GetParameters()
+            .Select(p =>
+            {
+                if (!p.ParameterType.IsClass)
+                    return scope.ServiceProvider.GetRequiredService(p.ParameterType);
+
+                var currentType = p.ParameterType;
+                while (currentType is not null && currentType != typeof(object))
+                {
+                    if (currentType.IsGenericType && currentType.GetGenericTypeDefinition() == typeof(Factory<>))
+                        return Create(p.ParameterType, scope);
+                    currentType = currentType.BaseType;
+                }
+
+                return scope.ServiceProvider.GetRequiredService(p.ParameterType);
+            })
+            .ToArray();
+
+        return constructor.Invoke(parameters);
     }
 }

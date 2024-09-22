@@ -1,5 +1,3 @@
-namespace WebApi;
-
 sealed class HelloWorld : EndpointWithoutRequest
 {
     public override void Configure()
@@ -7,7 +5,7 @@ sealed class HelloWorld : EndpointWithoutRequest
         Get("/api/HelloWorld");
         AllowAnonymous();
     }
-    
+
     public override async Task HandleAsync(CancellationToken ct)
     {
         await SendOkAsync("Hello world", ct);

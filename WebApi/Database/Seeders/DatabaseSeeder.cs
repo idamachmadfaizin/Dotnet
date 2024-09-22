@@ -4,11 +4,12 @@ using Libs;
 
 namespace Database.Seeders;
 
+// ReSharper disable once ClassNeverInstantiated.Global
 internal class DatabaseSeeder : Seeder
 {
-    public DatabaseSeeder(AppDbContext dbContext, IServiceProvider serviceProvider) : base(serviceProvider)
+    public DatabaseSeeder(AppDbContext dbContext, RoleFactory roleFactory)
     {
-        dbContext.AddRange(Create<RoleFactory>().Generate(2));
+        dbContext.AddRange(roleFactory.Generate(2));
         dbContext.SaveChanges();
     }
 }

@@ -1,6 +1,6 @@
-using App.Model.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Model.Entities;
 
 namespace Database.Context;
 
