@@ -1,3 +1,4 @@
+using Configurations;
 using Database.Context;
 using Database.Seeders;
 using FastEndpoints.Security;
@@ -6,13 +7,15 @@ using Model.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services
-    .AddAuthenticationJwtBearer(o => o.SigningKey = builder.Configuration["Auth:SigningKey"])
+    .AddAuthenticationJwtBearer(o => o.SigningKey = builder.Configuration[$"{nameof(Auth)}:{nameof(Auth.SigningKey)}"])
     .AddAuthorization()
     .AddFastEndpoints()
     .AddResponseCaching()
     .AddDbContext<AppDbContext>();
 
-builder.Services.Configure<IdentityOptions>(builder.Configuration.GetSection("Auth:IdentityOptions"));
+builder.Services
+    .Configure<Auth>(builder.Configuration.GetSection(nameof(Auth)))
+    .Configure<ConnectionStrings>(builder.Configuration.GetSection(nameof(ConnectionStrings)));
 
 builder.Services
     .AddIdentityApiEndpoints<User>()
@@ -31,15 +34,16 @@ if (!builder.Environment.IsProduction())
     });
 
 var app = builder.Build();
-app.UseDbSeed<DatabaseSeeder>(args)
-    .UseAuthentication()
+app.UseAuthentication()
     .UseAuthorization()
     .UseDefaultExceptionHandler()
     .UseFastEndpoints(config => config.Errors.UseProblemDetails());
 
 if (!app.Environment.IsProduction())
 {
-    app.UseSwaggerGen(uiConfig: settings => settings.DeActivateTryItOut());
+    app.UseDbSeed<DatabaseSeeder>(args)
+        .UseSwaggerGen(uiConfig: settings => settings.DeActivateTryItOut());
+
     app.MapGet("/", () => Results.Redirect("/swagger"))
         .ExcludeFromDescription();
 }
