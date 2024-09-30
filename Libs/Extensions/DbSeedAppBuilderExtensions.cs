@@ -6,11 +6,11 @@ namespace Microsoft.AspNetCore.Builder;
 
 public static class DbSeedAppBuilderExtensions
 {
-    public static IApplicationBuilder UseDbSeed<T>(this IApplicationBuilder builder, string[] args)
+    public static void UseDbSeed<T>(this IApplicationBuilder builder, string[] args)
         where T : Seeder
     {
         var seed = args.Any(arg => arg == "seed");
-        if (!seed) return builder;
+        if (!seed) return;
 
         using var scope = builder.ApplicationServices.CreateScope();
 
@@ -18,7 +18,7 @@ public static class DbSeedAppBuilderExtensions
 
         if (seederService is not T) throw new InvalidOperationException("No factory found for the given type.");
 
-        return builder;
+        Environment.Exit(0);
     }
 
     private static object Create(Type type, IServiceScope scope)
