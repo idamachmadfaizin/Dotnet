@@ -2,13 +2,20 @@ using Configurations;
 using Database.Context;
 using Database.Seeders;
 using FastEndpoints.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.FileProviders;
 using Model.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services
     .AddAuthenticationJwtBearer(o => o.SigningKey = builder.Configuration[$"{nameof(Auth)}:{nameof(Auth.SigningKey)}"])
-    .AddAuthorization()
+    .AddAuthorization(options =>
+    {
+        options.FallbackPolicy = new AuthorizationPolicyBuilder()
+            .RequireAuthenticatedUser()
+            .Build();
+    })
     .AddFastEndpoints()
     .AddResponseCaching()
     .AddDbContext<AppDbContext>();
@@ -34,16 +41,32 @@ if (!builder.Environment.IsProduction())
     });
 
 var app = builder.Build();
-app.UseAuthentication()
+
+app
+    .UseHsts()
+    .UseHttpsRedirection()
+    .UseStaticFiles();
+
+if (!app.Environment.IsProduction())
+{
+    app.UseDbSeed<DatabaseSeeder>(args);
+    app.UseSwaggerGen(uiConfig: settings => settings.DeActivateTryItOut());
+}
+
+app
+    .UseAuthentication()
     .UseAuthorization()
+    .UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(
+            Path.Combine(builder.Environment.ContentRootPath, "Storage", "App", "Public")),
+        RequestPath = "/Storage"
+    })
     .UseDefaultExceptionHandler()
     .UseFastEndpoints(config => config.Errors.UseProblemDetails());
 
 if (!app.Environment.IsProduction())
 {
-    app.UseDbSeed<DatabaseSeeder>(args)
-        .UseSwaggerGen(uiConfig: settings => settings.DeActivateTryItOut());
-
     app.MapGet("/", () => Results.Redirect("/swagger"))
         .ExcludeFromDescription();
 }
