@@ -72,5 +72,7 @@ if (!app.Environment.IsProduction())
 }
 
 app.MapIdentityApi<User>();
+app.MapGet("/throw", () => { throw new Exception("Error bro"); })
+    .AllowAnonymous();
 
 app.Run();
