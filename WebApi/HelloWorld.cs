@@ -2,8 +2,11 @@ sealed class HelloWorld : EndpointWithoutRequest
 {
     public override void Configure()
     {
-        Get("/api/HelloWorld");
+        Get("helloWorld");
         AllowAnonymous();
+        Description(x => x
+            .Produces<string>()
+            .ProducesProblemDetails(StatusCodes.Status500InternalServerError));
     }
 
     public override async Task HandleAsync(CancellationToken ct)

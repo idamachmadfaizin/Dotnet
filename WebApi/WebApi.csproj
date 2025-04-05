@@ -1,36 +1,43 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace />
-    <LangVersion>latestmajor</LangVersion>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Bogus" Version="35.6.2" />
-    <PackageReference Include="FastEndpoints" Version="5.35.0" />
-    <PackageReference Include="FastEndpoints.Security" Version="5.35.0" />
-    <PackageReference Include="FastEndpoints.Swagger" Version="5.35.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.3" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Bogus" Version="35.6.2" />
+        <PackageReference Include="FastEndpoints" Version="5.35.0" />
+        <PackageReference Include="FastEndpoints.Security" Version="5.35.0" />
+        <PackageReference Include="FastEndpoints.Swagger" Version="5.35.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.3" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.1.5" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="App\Enums\" />
-    <Folder Include="App\Extensions\"/>
-    <Folder Include="App\Http\Endpoints\" />
-    <Folder Include="App\Http\Commands\" />
-  </ItemGroup>
+    <ItemGroup>
+      <Content Include="..\.dockerignore">
+        <Link>.dockerignore</Link>
+      </Content>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Libs\Libs.csproj"/>
-  </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\Libs\Libs.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="App\Enums\" />
+      <Folder Include="App\Extensions\" />
+      <Folder Include="App\Http\Commands\" />
+      <Folder Include="App\Http\Endpoints\" />
+    </ItemGroup>
 
 </Project>

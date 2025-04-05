@@ -2,10 +2,13 @@ using Configurations;
 using Database.Context;
 using Database.Seeders;
 using FastEndpoints.Security;
+using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.FileProviders;
 using Model.Entities;
+using Scalar.AspNetCore;
+using WebApi;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services
@@ -17,28 +20,13 @@ builder.Services
             .Build();
     })
     .AddFastEndpoints()
+    .AddSwaggerDocuments()
     .AddResponseCaching()
-    .AddDbContext<AppDbContext>();
-
-builder.Services
-    .Configure<Auth>(builder.Configuration.GetSection(nameof(Auth)))
-    .Configure<ConnectionStrings>(builder.Configuration.GetSection(nameof(ConnectionStrings)));
-
-builder.Services
+    .AddConfigure(builder.Configuration)
+    .AddDbContext<AppDbContext>()
     .AddIdentityApiEndpoints<User>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
-
-if (!builder.Environment.IsProduction())
-    builder.Services.SwaggerDocument(o =>
-    {
-        o.DocumentSettings = settings =>
-        {
-            settings.DocumentName = "v0";
-            settings.Version = "0.0.0";
-        };
-        o.FlattenSchema = true;
-    });
 
 var app = builder.Build();
 
@@ -47,32 +35,39 @@ app
     .UseHttpsRedirection()
     .UseStaticFiles();
 
-if (!app.Environment.IsProduction())
+if (app.Environment.IsDevelopment())
 {
     app.UseDbSeed<DatabaseSeeder>(args);
-    app.UseSwaggerGen(uiConfig: settings => settings.DeActivateTryItOut());
+
+    // app.UseOpenApi(settings => settings.Path = "/openapi/{documentName}.json");
+    app.UseSwaggerGen();
+    app.MapScalarApiReference(options =>
+            options.WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json"))
+        .AllowAnonymous();
+    app.MapGet("/", () => Results.Redirect("/swagger"))
+        .AllowAnonymous()
+        .ExcludeFromDescription();
 }
 
 app
     .UseAuthentication()
-    .UseAuthorization()
-    .UseStaticFiles(new StaticFileOptions
-    {
-        FileProvider = new PhysicalFileProvider(
-            Path.Combine(builder.Environment.ContentRootPath, "Storage", "App", "Public")),
-        RequestPath = "/Storage"
-    })
-    .UseDefaultExceptionHandler()
-    .UseFastEndpoints(config => config.Errors.UseProblemDetails());
+    .UseAuthorization();
 
-if (!app.Environment.IsProduction())
+app.UseStaticFiles(new StaticFileOptions
 {
-    app.MapGet("/", () => Results.Redirect("/swagger"))
-        .ExcludeFromDescription();
-}
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "Storage", "App", "Public")),
+    RequestPath = "/Storage",
+});
 
-app.MapIdentityApi<User>();
-app.MapGet("/throw", () => { throw new Exception("Error bro"); })
-    .AllowAnonymous();
+app
+    .UseDefaultExceptionHandler()
+    .UseFastEndpoints(config =>
+    {
+        config.Endpoints.RoutePrefix = "api";
+        config.Versioning.Prefix = "v";
+        config.Versioning.PrependToRoute = true;
+        config.Errors.UseProblemDetails();
+    });
 
 app.Run();
