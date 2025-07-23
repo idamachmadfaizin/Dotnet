@@ -2,16 +2,15 @@ using Configurations;
 using Database.Context;
 using Database.Seeders;
 using FastEndpoints.Security;
-using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.FileProviders;
 using Model.Entities;
-using Scalar.AspNetCore;
 using WebApi;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services
+    .AddConfigurations(builder.Configuration)
     .AddAuthenticationJwtBearer(o => o.SigningKey = builder.Configuration[$"{nameof(Auth)}:{nameof(Auth.SigningKey)}"])
     .AddAuthorization(options =>
     {
@@ -22,7 +21,6 @@ builder.Services
     .AddFastEndpoints()
     .AddSwaggerDocuments()
     .AddResponseCaching()
-    .AddConfigure(builder.Configuration)
     .AddDbContext<AppDbContext>()
     .AddIdentityApiEndpoints<User>()
     .AddEntityFrameworkStores<AppDbContext>()
@@ -38,15 +36,7 @@ app
 if (app.Environment.IsDevelopment())
 {
     app.UseDbSeed<DatabaseSeeder>(args);
-
-    // app.UseOpenApi(settings => settings.Path = "/openapi/{documentName}.json");
-    app.UseSwaggerGen();
-    app.MapScalarApiReference(options =>
-            options.WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json"))
-        .AllowAnonymous();
-    app.MapGet("/", () => Results.Redirect("/swagger"))
-        .AllowAnonymous()
-        .ExcludeFromDescription();
+    app.UseApiDocumentations();
 }
 
 app
@@ -60,12 +50,15 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/Storage",
 });
 
+app.MapIdentityApi<User>();
+
 app
     .UseDefaultExceptionHandler()
     .UseFastEndpoints(config =>
     {
         config.Endpoints.RoutePrefix = "api";
         config.Versioning.Prefix = "v";
+        config.Versioning.DefaultVersion = 1;
         config.Versioning.PrependToRoute = true;
         config.Errors.UseProblemDetails();
     });

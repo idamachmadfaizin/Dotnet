@@ -1,4 +1,6 @@
-sealed class HelloWorld : EndpointWithoutRequest
+namespace WebApi.App.Http.Endpoints.V1;
+
+internal sealed class HelloWorld : EndpointWithoutRequest
 {
     public override void Configure()
     {

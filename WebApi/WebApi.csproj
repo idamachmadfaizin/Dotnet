@@ -37,7 +37,6 @@
       <Folder Include="App\Enums\" />
       <Folder Include="App\Extensions\" />
       <Folder Include="App\Http\Commands\" />
-      <Folder Include="App\Http\Endpoints\" />
     </ItemGroup>
 
 </Project>
