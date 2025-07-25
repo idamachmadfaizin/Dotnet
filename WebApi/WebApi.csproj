@@ -8,19 +8,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Bogus" Version="35.6.2" />
-        <PackageReference Include="FastEndpoints" Version="5.35.0" />
-        <PackageReference Include="FastEndpoints.Security" Version="5.35.0" />
-        <PackageReference Include="FastEndpoints.Swagger" Version="5.35.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.3" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
+        <PackageReference Include="Bogus" Version="35.6.3" />
+        <PackageReference Include="FastEndpoints" Version="7.0.0" />
+        <PackageReference Include="FastEndpoints.Security" Version="7.0.0" />
+        <PackageReference Include="FastEndpoints.Swagger" Version="7.0.0" />
+        <PackageReference Include="Idam.EFTimestamps" Version="8.1.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.7" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.7">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.3" />
-        <PackageReference Include="Scalar.AspNetCore" Version="2.1.5" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.7" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.6.4" />
     </ItemGroup>
 
     <ItemGroup>
