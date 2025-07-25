@@ -14,6 +14,6 @@ internal sealed class HelloWorldV2 : EndpointWithoutRequest
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        await SendOkAsync("Hello world v2", ct);
+        await Send.OkAsync("Hello world v2", ct);
     }
 }
