@@ -2,8 +2,6 @@ using Configurations;
 using Database.Context;
 using Database.Seeders;
 using FastEndpoints.Security;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.FileProviders;
 using Model.Entities;
 using WebApi;
