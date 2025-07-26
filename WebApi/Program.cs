@@ -1,7 +1,10 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Configurations;
 using Database.Context;
 using Database.Seeders;
 using FastEndpoints.Security;
+using HealthChecks.ApplicationStatus.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Model.Entities;
 using WebApi;
@@ -17,6 +20,11 @@ builder.Services
     .AddDbContext<AppDbContext>()
     .AddIdentityApiEndpoints<User>()
     .AddEntityFrameworkStores<AppDbContext>();
+
+var connectionString = builder.Configuration.GetConnectionString(nameof(ConnectionStrings.DefaultConnection));
+builder.Services.AddHealthChecks()
+    .AddApplicationStatus()
+    .AddSqlite(connectionString ?? throw new InvalidOperationException());
 
 var app = builder.Build();
 
@@ -42,9 +50,22 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/Storage",
 });
 
-app.MapGroup("/api")
+app.MapGroup("api")
     .WithTags("Identity")
     .MapIdentityApi<User>();
+
+var healthCheckJsonOptions = new JsonSerializerOptions
+{
+    Converters = { new JsonStringEnumConverter() },
+};
+app.MapHealthChecks("/healthz", new()
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync(JsonSerializer.Serialize(report, healthCheckJsonOptions));
+    }
+});
 
 app
     .UseDefaultExceptionHandler()
