@@ -12,19 +12,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services
     .AddConfigurations(builder.Configuration)
     .AddAuthenticationJwtBearer(o => o.SigningKey = builder.Configuration[$"{nameof(Auth)}:{nameof(Auth.SigningKey)}"])
-    .AddAuthorization(options =>
-    {
-        options.FallbackPolicy = new AuthorizationPolicyBuilder()
-            .RequireAuthenticatedUser()
-            .Build();
-    })
+    .AddAuthorization()
     .AddFastEndpoints()
     .AddSwaggerDocuments()
     .AddResponseCaching()
     .AddDbContext<AppDbContext>()
     .AddIdentityApiEndpoints<User>()
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultTokenProviders();
+    .AddEntityFrameworkStores<AppDbContext>();
 
 var app = builder.Build();
 
@@ -50,7 +44,9 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/Storage",
 });
 
-app.MapIdentityApi<User>();
+app.MapGroup("/api")
+    .WithTags("Identity")
+    .MapIdentityApi<User>();
 
 app
     .UseDefaultExceptionHandler()

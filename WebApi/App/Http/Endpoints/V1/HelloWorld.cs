@@ -5,7 +5,7 @@ internal sealed class HelloWorld : EndpointWithoutRequest
     public override void Configure()
     {
         Get("helloWorld");
-        AllowAnonymous();
+        // AllowAnonymous();
         Description(x => x
             .Produces<string>()
             .ProducesProblemDetails(StatusCodes.Status500InternalServerError));
