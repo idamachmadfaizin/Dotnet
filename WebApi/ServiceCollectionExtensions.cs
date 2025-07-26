@@ -1,5 +1,6 @@
 using Configurations;
 using FastEndpoints.Swagger;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 
 namespace WebApi;
@@ -11,6 +12,7 @@ public static class ServiceCollectionExtensions
     {
         services
             .Configure<Auth>(configuration.GetSection(nameof(Auth)))
+            .Configure<IdentityOptions>(configuration.GetSection($"{nameof(Auth)}:{nameof(Auth.IdentityOptions)}"))
             .Configure<ConnectionStrings>(configuration.GetSection(nameof(ConnectionStrings)))
             .Configure<Swagger>(configuration.GetSection(nameof(Swagger)));
 
