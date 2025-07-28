@@ -35,6 +35,7 @@ app
 
 if (app.Environment.IsDevelopment())
 {
+    await app.EnsureMigrateAsync();
     app.UseDbSeed<DatabaseSeeder>(args);
     app.UseApiDocumentations();
 }
