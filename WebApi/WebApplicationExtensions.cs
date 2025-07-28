@@ -1,5 +1,7 @@
 using Configurations;
+using Database.Context;
 using FastEndpoints.Swagger;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 
@@ -7,15 +9,15 @@ namespace WebApi;
 
 public static class WebApplicationExtensions
 {
-    public static IApplicationBuilder UseApiDocumentations(this WebApplication app)
+    public static WebApplication UseApiDocumentations(this WebApplication app)
     {
         var swaggerConfig = app.Services.GetRequiredService<IOptions<Swagger>>().Value;
-        
+
         if (app.Services.GetRequiredService<IWebHostEnvironment>().IsDevelopment() != swaggerConfig.IsDevelopment)
             return app;
-        
+
         app.UseSwaggerGen();
-        
+
         app.MapScalarApiReference(options =>
             {
                 options
@@ -24,18 +26,27 @@ public static class WebApplicationExtensions
 
                 if (!swaggerConfig.DocumentOptions.Any())
                     return;
-                
+
                 foreach (var documentOption in swaggerConfig.DocumentOptions)
                 {
-                    options.AddDocument(documentOption.DocumentSettings.DocumentName, documentOption.DocumentSettings.Version);
+                    options.AddDocument(documentOption.DocumentSettings.DocumentName,
+                        documentOption.DocumentSettings.Version);
                 }
             })
             .AllowAnonymous();
-        
+
         app.MapGet("/", () => Results.Redirect("/swagger"))
             .AllowAnonymous()
             .ExcludeFromDescription();
 
         return app;
+    }
+
+    public static Task EnsureMigrateAsync(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        return db.Database.MigrateAsync();
     }
 }
