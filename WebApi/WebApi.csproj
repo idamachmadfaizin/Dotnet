@@ -24,6 +24,7 @@
         </PackageReference>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.7" />
         <PackageReference Include="Scalar.AspNetCore" Version="2.6.4" />
+        <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -40,6 +41,7 @@
       <Folder Include="App\Enums\" />
       <Folder Include="App\Extensions\" />
       <Folder Include="App\Http\Commands\" />
+      <Folder Include="Logs\" />
     </ItemGroup>
 
 </Project>

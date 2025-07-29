@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Configurations;
@@ -7,76 +8,109 @@ using FastEndpoints.Security;
 using HealthChecks.ApplicationStatus.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Model.Entities;
+using Serilog;
 using WebApi;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services
-    .AddConfigurations(builder.Configuration)
-    .AddAuthenticationJwtBearer(o => o.SigningKey = builder.Configuration[$"{nameof(Auth)}:{nameof(Auth.SigningKey)}"])
-    .AddAuthorization()
-    .AddFastEndpoints()
-    .AddSwaggerDocuments()
-    .AddResponseCaching()
-    .AddDbContext<AppDbContext>()
-    .AddIdentityApiEndpoints<User>()
-    .AddEntityFrameworkStores<AppDbContext>();
 
-var connectionString = builder.Configuration.GetConnectionString(nameof(ConnectionStrings.DefaultConnection));
-builder.Services.AddHealthChecks()
-    .AddApplicationStatus()
-    .AddSqlite(connectionString ?? throw new InvalidOperationException());
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateBootstrapLogger();
 
-var app = builder.Build();
+Log.Information("Starting Server {Application}");
 
-app
-    .UseHsts()
-    .UseHttpsRedirection()
-    .UseStaticFiles();
-
-if (app.Environment.IsDevelopment())
+try
 {
-    await app.EnsureMigrateAsync();
-    app.UseDbSeed<DatabaseSeeder>(args);
-    app.UseApiDocumentations();
-}
+    builder.Services
+        .AddSerilog((services, config) => config
+            .ReadFrom.Configuration(builder.Configuration)
+            .ReadFrom.Services(services))
+        .AddConfigurations(builder.Configuration)
+        .AddAuthenticationJwtBearer(o =>
+        {
+            var signingKey = builder.Configuration[$"{nameof(Auth)}:{nameof(Auth.SigningKey)}"];
+            ArgumentException.ThrowIfNullOrWhiteSpace(signingKey);
+            o.SigningKey = signingKey;
+        })
+        .AddAuthorization()
+        .AddFastEndpoints()
+        .AddSwaggerDocuments()
+        .AddResponseCaching()
+        .AddDbContext<AppDbContext>()
+        .AddIdentityApiEndpoints<User>()
+        .AddEntityFrameworkStores<AppDbContext>();
 
-app
-    .UseAuthentication()
-    .UseAuthorization();
+    var connectionString = builder.Configuration.GetConnectionString(nameof(ConnectionStrings.DefaultConnection));
+    builder.Services.AddHealthChecks()
+        .AddApplicationStatus()
+        .AddSqlite(connectionString ?? throw new InvalidOperationException());
 
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(builder.Environment.ContentRootPath, "Storage", "App", "Public")),
-    RequestPath = "/Storage",
-});
+    var app = builder.Build();
 
-app.MapGroup("api")
-    .WithTags("Identity")
-    .MapIdentityApi<User>();
-
-var healthCheckJsonOptions = new JsonSerializerOptions
-{
-    Converters = { new JsonStringEnumConverter() },
-};
-app.MapHealthChecks("/healthz", new()
-{
-    ResponseWriter = async (context, report) =>
+    app.UseDefaultExceptionHandler()
+        .UseHttpsRedirection();
+    if (app.Environment.IsDevelopment())
     {
-        context.Response.ContentType = "application/json";
-        await context.Response.WriteAsync(JsonSerializer.Serialize(report, healthCheckJsonOptions));
+        app.UseHsts();
     }
-});
+    app.UseSerilogRequestLogging()
+        .UseStaticFiles()
+        .UseResponseCaching();
 
-app
-    .UseDefaultExceptionHandler()
-    .UseFastEndpoints(config =>
+    if (app.Environment.IsDevelopment())
     {
-        config.Endpoints.RoutePrefix = "api";
-        config.Versioning.Prefix = "v";
-        config.Versioning.DefaultVersion = 1;
-        config.Versioning.PrependToRoute = true;
-        config.Errors.UseProblemDetails();
+        await app.EnsureMigrateAsync();
+        app.UseDbSeed<DatabaseSeeder>(args);
+        app.UseApiDocumentations();
+    }
+
+    app
+        .UseAuthentication()
+        .UseAuthorization();
+
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(
+            Path.Combine(builder.Environment.ContentRootPath, "Storage", "App", "Public")),
+        RequestPath = "/Storage",
     });
 
-app.Run();
+    app.MapGroup("api")
+        .WithTags("Identity")
+        .MapIdentityApi<User>();
+
+    var healthCheckJsonOptions = new JsonSerializerOptions
+    {
+        Converters = { new JsonStringEnumConverter() },
+    };
+    app.MapHealthChecks("/healthz", new()
+    {
+        ResponseWriter = async (context, report) =>
+        {
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(JsonSerializer.Serialize(report, healthCheckJsonOptions));
+        }
+    });
+
+    app.UseFastEndpoints(config =>
+        {
+            config.Endpoints.RoutePrefix = "api";
+            config.Versioning.Prefix = "v";
+            config.Versioning.DefaultVersion = 1;
+            config.Versioning.PrependToRoute = true;
+            config.Errors.UseProblemDetails();
+        });
+
+    Log.Information("Server {Application} started successfully");
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "An unhandled exception occurred during bootstrapping");
+}
+finally
+{
+    Log.Information("Shutting down server {Application}");
+    Log.CloseAndFlush();
+}
