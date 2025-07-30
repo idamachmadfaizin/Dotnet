@@ -14,7 +14,8 @@ public static class ServiceCollectionExtensions
             .Configure<Auth>(configuration.GetSection(nameof(Auth)))
             .Configure<IdentityOptions>(configuration.GetSection($"{nameof(Auth)}:{nameof(Auth.IdentityOptions)}"))
             .Configure<ConnectionStrings>(configuration.GetSection(nameof(ConnectionStrings)))
-            .Configure<Swagger>(configuration.GetSection(nameof(Swagger)));
+            .Configure<Swagger>(configuration.GetSection(nameof(Swagger)))
+            .Configure<Localization>(configuration.GetSection(nameof(Localization)));
 
         return services;
     }

@@ -1,4 +1,4 @@
-using System.Diagnostics;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Configurations;
@@ -6,6 +6,7 @@ using Database.Context;
 using Database.Seeders;
 using FastEndpoints.Security;
 using HealthChecks.ApplicationStatus.DependencyInjection;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.FileProviders;
 using Model.Entities;
 using Serilog;
@@ -40,6 +41,20 @@ try
         .AddIdentityApiEndpoints<User>()
         .AddEntityFrameworkStores<AppDbContext>();
 
+    builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+    builder.Services.Configure<RequestLocalizationOptions>(options =>
+    {
+        var localization = builder.Configuration.GetSection(nameof(Localization)).Get<Localization>() ??
+                           new Localization();
+        var supportedCultures = localization.SupportedCultures
+            .Select(culture => new CultureInfo(culture))
+            .ToArray();
+
+        options.DefaultRequestCulture = new RequestCulture(localization.DefaultCulture);
+        options.SupportedCultures = supportedCultures;
+        options.SupportedUICultures = supportedCultures;
+    });
+
     var connectionString = builder.Configuration.GetConnectionString(nameof(ConnectionStrings.DefaultConnection));
     builder.Services.AddHealthChecks()
         .AddApplicationStatus()
@@ -47,6 +62,7 @@ try
 
     var app = builder.Build();
 
+    app.UseRequestLocalization();
     app.UseDefaultExceptionHandler()
         .UseHttpsRedirection();
     if (app.Environment.IsDevelopment())
@@ -93,13 +109,13 @@ try
     });
 
     app.UseFastEndpoints(config =>
-        {
-            config.Endpoints.RoutePrefix = "api";
-            config.Versioning.Prefix = "v";
-            config.Versioning.DefaultVersion = 1;
-            config.Versioning.PrependToRoute = true;
-            config.Errors.UseProblemDetails();
-        });
+    {
+        config.Endpoints.RoutePrefix = "api";
+        config.Versioning.Prefix = "v";
+        config.Versioning.DefaultVersion = 1;
+        config.Versioning.PrependToRoute = true;
+        config.Errors.UseProblemDetails();
+    });
 
     Log.Information("Server {Application} started successfully");
 
