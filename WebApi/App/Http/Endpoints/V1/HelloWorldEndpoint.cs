@@ -1,11 +1,10 @@
-namespace WebApi.App.Http.Endpoints.V2;
+namespace WebApi.App.Http.Endpoints.V1;
 
-internal sealed class HelloWorldV2 : EndpointWithoutRequest
+internal sealed class HelloWorldEndpoint : EndpointWithoutRequest
 {
     public override void Configure()
     {
         Get("helloWorld");
-        Version(2);
         AllowAnonymous();
         Description(x => x
             .Produces<string>()
@@ -14,6 +13,7 @@ internal sealed class HelloWorldV2 : EndpointWithoutRequest
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        await Send.OkAsync("Hello world v2", ct);
+        Logger.LogInformation("FE info logger");
+        await Send.OkAsync("Hello world", ct);
     }
 }
