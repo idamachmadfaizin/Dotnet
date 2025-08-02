@@ -48,7 +48,12 @@ try
                            new Localization();
         var supportedCultures = localization.SupportedCultures
             .Select(culture => new CultureInfo(culture))
-            .ToArray();
+            .ToList();
+
+        if (supportedCultures.Count == 0)
+        {
+            supportedCultures.Add(new(localization.DefaultCulture));
+        }
 
         options.DefaultRequestCulture = new RequestCulture(localization.DefaultCulture);
         options.SupportedCultures = supportedCultures;
@@ -77,7 +82,6 @@ try
     {
         await app.EnsureMigrateAsync();
         app.UseDbSeed<DatabaseSeeder>(args);
-        app.UseApiDocumentations();
     }
 
     app
@@ -116,6 +120,11 @@ try
         config.Versioning.PrependToRoute = true;
         config.Errors.UseProblemDetails();
     });
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseApiDocumentations();
+    }
 
     Log.Information("Server {Application} started successfully");
 

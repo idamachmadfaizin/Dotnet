@@ -2,6 +2,11 @@ using Configurations;
 using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using NJsonSchema;
+using NSwag;
+using NSwag.Generation.Processors;
+using OpenApiExample = NSwag.OpenApiExample;
+using OpenApiParameter = NSwag.OpenApiParameter;
 
 namespace WebApi;
 
@@ -28,9 +33,40 @@ public static class ServiceCollectionExtensions
         if (provider.GetRequiredService<IWebHostEnvironment>().IsDevelopment() != swaggerConfig.IsDevelopment)
             return services;
 
+        var acceptLanguageOperationProcessor = new OperationProcessor(context =>
+        {
+            var localization = provider.GetRequiredService<IOptions<Localization>>().Value;
+            var supportedCultures = localization.SupportedCultures.Count == 0
+                ? [localization.DefaultCulture]
+                : localization.SupportedCultures;
+
+            context.OperationDescription.Operation.Parameters.Add(new OpenApiParameter
+            {
+                Name = "Accept-Language",
+                IsRequired = false,
+                Type = JsonObjectType.String,
+                Schema = JsonSchema.FromType<string>(),
+                Kind = OpenApiParameterKind.Header,
+                Description = "Preferred language for the response",
+                Examples = supportedCultures.ToDictionary(
+                    s => s,
+                    s => new OpenApiExample
+                    {
+                        Value = s,
+                    }),
+            });
+            return true;
+        });
+
         if (!swaggerConfig.DocumentOptions.Any())
         {
-            services.SwaggerDocument();
+            services.SwaggerDocument(options =>
+            {
+                options.DocumentSettings = settings =>
+                {
+                    settings.OperationProcessors.Add(acceptLanguageOperationProcessor);
+                };
+            });
 
             return services;
         }
@@ -40,10 +76,11 @@ public static class ServiceCollectionExtensions
             services.SwaggerDocument(options =>
             {
                 options.AutoTagPathSegmentIndex = documentOption.AutoTagPathSegmentIndex;
-                options.DocumentSettings = s =>
+                options.DocumentSettings = settings =>
                 {
-                    s.DocumentName = documentOption.DocumentSettings.DocumentName;
-                    s.Version = documentOption.DocumentSettings.Version;
+                    settings.DocumentName = documentOption.DocumentSettings.DocumentName;
+                    settings.Version = documentOption.DocumentSettings.Version;
+                    settings.OperationProcessors.Add(acceptLanguageOperationProcessor);
                 };
                 options.EnableGetRequestsWithBody = documentOption.EnableGetRequestsWithBody;
                 options.EnableJWTBearerAuth = documentOption.EnableJWTBearerAuth;
@@ -60,7 +97,7 @@ public static class ServiceCollectionExtensions
                 options.TagDescriptions = s =>
                 {
                     if (documentOption.TagDescriptions is null) return;
-                    
+
                     foreach (var (key, value) in documentOption.TagDescriptions)
                         s[key] = value;
                 };
