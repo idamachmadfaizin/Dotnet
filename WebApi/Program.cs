@@ -1,12 +1,9 @@
-using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Configurations;
 using Database.Context;
 using Database.Seeders;
 using FastEndpoints.Security;
-using HealthChecks.ApplicationStatus.DependencyInjection;
-using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.FileProviders;
 using Model.Entities;
 using Serilog;
@@ -39,13 +36,9 @@ try
         .AddResponseCaching()
         .AddLocalizationAndConfigure()
         .AddDbContext<AppDbContext>()
+        .AddAppHealthChecks()
         .AddIdentityApiEndpoints<User>()
         .AddEntityFrameworkStores<AppDbContext>();
-
-    var connectionString = builder.Configuration.GetConnectionString(nameof(ConnectionStrings.DefaultConnection));
-    builder.Services.AddHealthChecks()
-        .AddApplicationStatus()
-        .AddSqlite(connectionString ?? throw new InvalidOperationException());
 
     var app = builder.Build();
 

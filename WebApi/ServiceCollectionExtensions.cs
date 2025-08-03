@@ -1,6 +1,7 @@
 using System.Globalization;
 using Configurations;
 using FastEndpoints.Swagger;
+using HealthChecks.ApplicationStatus.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
@@ -134,6 +135,19 @@ public static class ServiceCollectionExtensions
                 options.SupportedUICultures = supportedCultures;
             });
 
+        return services;
+    }
+
+    public static IServiceCollection AddAppHealthChecks(this IServiceCollection services)
+    {
+        using var provider = services.BuildServiceProvider();
+        var connectionStringsConfig = provider.GetRequiredService<IOptions<ConnectionStrings>>().Value;
+        
+        var connectionString = connectionStringsConfig.DefaultConnection;
+        services.AddHealthChecks()
+            .AddApplicationStatus()
+            .AddSqlite(connectionString);
+        
         return services;
     }
 }
