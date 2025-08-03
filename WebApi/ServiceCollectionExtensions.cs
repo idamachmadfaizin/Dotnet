@@ -162,15 +162,16 @@ public static class ServiceCollectionExtensions
         {
             options.AddDefaultPolicy(policy =>
             {
-                var allowedOrigins = cors.AllowedOrigins.ToArray();
-                // var policyBuilder = allowedOrigins.Length > 0 && allowedOrigins is not ["*"]
-                //     ? policy.WithOrigins(allowedOrigins)
-                //     : policy.AllowAnyOrigin();
+                var allowedOrigins = cors.AllowedOrigins;
+                var anyWildcard = allowedOrigins.Any(allowedOrigin => allowedOrigin.Trim() == "*");
 
-                policy.WithOrigins(allowedOrigins)
+                var policyBuilder = anyWildcard
+                    ? policy.AllowAnyOrigin()
+                    : policy.WithOrigins(allowedOrigins.ToArray()).AllowCredentials();
+
+                policyBuilder
                     .AllowAnyMethod()
                     .AllowAnyHeader()
-                    .AllowCredentials()
                     .SetPreflightMaxAge(
                         TimeSpan.FromMinutes(cors.PreflightMaxAgeMinutes)); // Cache preflight for 10 minutes
             });
