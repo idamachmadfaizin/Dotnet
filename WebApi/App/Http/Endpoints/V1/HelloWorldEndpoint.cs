@@ -1,3 +1,5 @@
+using WebApi.Resources;
+
 namespace WebApi.App.Http.Endpoints.V1;
 
 internal sealed class HelloWorldEndpoint : EndpointWithoutRequest
@@ -14,6 +16,6 @@ internal sealed class HelloWorldEndpoint : EndpointWithoutRequest
     public override async Task HandleAsync(CancellationToken ct)
     {
         Logger.LogInformation("FE info logger");
-        await Send.OkAsync("Hello world", ct);
+        await Send.OkAsync(Localizer.Hello_World, ct);
     }
 }
