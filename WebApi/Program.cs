@@ -37,28 +37,10 @@ try
         .AddFastEndpoints()
         .AddSwaggerDocuments()
         .AddResponseCaching()
+        .AddLocalizationAndConfigure()
         .AddDbContext<AppDbContext>()
         .AddIdentityApiEndpoints<User>()
         .AddEntityFrameworkStores<AppDbContext>();
-
-    builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
-    builder.Services.Configure<RequestLocalizationOptions>(options =>
-    {
-        var localization = builder.Configuration.GetSection(nameof(Localization)).Get<Localization>() ??
-                           new Localization();
-        var supportedCultures = localization.SupportedCultures
-            .Select(culture => new CultureInfo(culture))
-            .ToList();
-
-        if (supportedCultures.Count == 0)
-        {
-            supportedCultures.Add(new(localization.DefaultCulture));
-        }
-
-        options.DefaultRequestCulture = new RequestCulture(localization.DefaultCulture);
-        options.SupportedCultures = supportedCultures;
-        options.SupportedUICultures = supportedCultures;
-    });
 
     var connectionString = builder.Configuration.GetConnectionString(nameof(ConnectionStrings.DefaultConnection));
     builder.Services.AddHealthChecks()
@@ -67,13 +49,14 @@ try
 
     var app = builder.Build();
 
-    app.UseRequestLocalization();
-    app.UseDefaultExceptionHandler()
+    app.UseRequestLocalization()
+        .UseDefaultExceptionHandler()
         .UseHttpsRedirection();
     if (app.Environment.IsDevelopment())
     {
         app.UseHsts();
     }
+
     app.UseSerilogRequestLogging()
         .UseStaticFiles()
         .UseResponseCaching();

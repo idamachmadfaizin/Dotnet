@@ -1,6 +1,8 @@
+using System.Globalization;
 using Configurations;
 using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
 using NJsonSchema;
 using NSwag;
@@ -27,19 +29,19 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddSwaggerDocuments(this IServiceCollection services)
     {
-        var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
         var swaggerConfig = provider.GetRequiredService<IOptions<Swagger>>().Value;
 
         if (provider.GetRequiredService<IWebHostEnvironment>().IsDevelopment() != swaggerConfig.IsDevelopment)
             return services;
 
+        var localization = provider.GetRequiredService<IOptions<Localization>>().Value;
+        var supportedCultures = localization.SupportedCultures.Count == 0
+            ? [localization.DefaultCulture]
+            : localization.SupportedCultures;
+
         var acceptLanguageOperationProcessor = new OperationProcessor(context =>
         {
-            var localization = provider.GetRequiredService<IOptions<Localization>>().Value;
-            var supportedCultures = localization.SupportedCultures.Count == 0
-                ? [localization.DefaultCulture]
-                : localization.SupportedCultures;
-
             context.OperationDescription.Operation.Parameters.Add(new OpenApiParameter
             {
                 Name = "Accept-Language",
@@ -105,6 +107,32 @@ public static class ServiceCollectionExtensions
                 options.UseOneOfForPolymorphism = documentOption.UseOneOfForPolymorphism;
             });
         }
+
+        return services;
+    }
+
+    public static IServiceCollection AddLocalizationAndConfigure(this IServiceCollection services)
+    {
+        using var provider = services.BuildServiceProvider();
+        var localizationConfig = provider.GetRequiredService<IOptions<Localization>>().Value;
+        
+        services
+            .AddLocalization(options => options.ResourcesPath = "Resources")
+            .Configure<RequestLocalizationOptions>(options =>
+            {
+                var supportedCultures = localizationConfig.SupportedCultures
+                    .Select(culture => new CultureInfo(culture))
+                    .ToList();
+
+                if (supportedCultures.Count == 0)
+                {
+                    supportedCultures.Add(new CultureInfo(localizationConfig.DefaultCulture));
+                }
+
+                options.DefaultRequestCulture = new RequestCulture(localizationConfig.DefaultCulture);
+                options.SupportedCultures = supportedCultures;
+                options.SupportedUICultures = supportedCultures;
+            });
 
         return services;
     }
