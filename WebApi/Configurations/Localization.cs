@@ -1,4 +1,4 @@
-namespace Configurations;
+namespace WebApi.Configurations;
 
 public class Localization
 {

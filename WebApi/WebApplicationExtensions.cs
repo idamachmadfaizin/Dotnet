@@ -1,9 +1,9 @@
-using Configurations;
-using Database.Context;
 using FastEndpoints.Swagger;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
+using WebApi.Configurations;
+using WebApi.Database.Context;
 
 namespace WebApi;
 

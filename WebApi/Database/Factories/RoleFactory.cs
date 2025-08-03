@@ -1,7 +1,7 @@
 using Libs;
 using Microsoft.AspNetCore.Identity;
 
-namespace Database.Factories;
+namespace WebApi.Database.Factories;
 
 internal sealed class RoleFactory : Factory<IdentityRole>
 {

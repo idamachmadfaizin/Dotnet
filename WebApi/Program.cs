@@ -1,13 +1,13 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Configurations;
-using Database.Context;
-using Database.Seeders;
 using FastEndpoints.Security;
 using Microsoft.Extensions.FileProviders;
-using Model.Entities;
 using Serilog;
 using WebApi;
+using WebApi.App.Model.Entities;
+using WebApi.Configurations;
+using WebApi.Database.Context;
+using WebApi.Database.Seeders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +15,7 @@ Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .CreateBootstrapLogger();
 
+// ReSharper disable once StructuredMessageTemplateProblem
 Log.Information("Starting Server {Application}");
 
 try
@@ -108,6 +109,7 @@ try
         app.UseApiDocumentations();
     }
 
+    // ReSharper disable once StructuredMessageTemplateProblem
     Log.Information("Server {Application} started successfully");
 
     app.Run();
@@ -118,6 +120,7 @@ catch (Exception ex)
 }
 finally
 {
+    // ReSharper disable once StructuredMessageTemplateProblem
     Log.Information("Shutting down server {Application}");
     Log.CloseAndFlush();
 }

@@ -1,10 +1,10 @@
-using Configurations;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Model.Entities;
+using WebApi.App.Model.Entities;
+using WebApi.Configurations;
 
-namespace Database.Context;
+namespace WebApi.Database.Context;
 
 public class AppDbContext(
     DbContextOptions options,

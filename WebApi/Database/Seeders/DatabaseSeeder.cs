@@ -1,8 +1,8 @@
-using Database.Context;
-using Database.Factories;
 using Libs;
+using WebApi.Database.Context;
+using WebApi.Database.Factories;
 
-namespace Database.Seeders;
+namespace WebApi.Database.Seeders;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 internal class DatabaseSeeder : Seeder

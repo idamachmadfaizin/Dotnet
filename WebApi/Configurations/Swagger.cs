@@ -1,7 +1,7 @@
 using FastEndpoints.Swagger;
 using NSwag.Generation.AspNetCore;
 
-namespace Configurations;
+namespace WebApi.Configurations;
 
 public class Swagger
 {
@@ -13,7 +13,7 @@ public class DocumentOption
     public int AutoTagPathSegmentIndex { get; set; } = 1;
     public AspNetCoreOpenApiDocumentGeneratorSettings DocumentSettings { get; set; } = new();
     public bool EnableGetRequestsWithBody { get; set; }
-    public bool EnableJWTBearerAuth { get; set; } = true;
+    public bool EnableJwtBearerAuth { get; set; } = true;
     public bool ExcludeNonFastEndpoints { get; set; }
     public bool FlattenSchema { get; set; }
     public int MaxEndpointVersion { get; set; }

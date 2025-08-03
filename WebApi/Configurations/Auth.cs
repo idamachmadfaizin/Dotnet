@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace Configurations;
+namespace WebApi.Configurations;
 
 public class Auth
 {

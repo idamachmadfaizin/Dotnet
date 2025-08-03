@@ -1,5 +1,4 @@
 using System.Globalization;
-using Configurations;
 using FastEndpoints.Swagger;
 using HealthChecks.ApplicationStatus.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
@@ -7,8 +6,7 @@ using Microsoft.AspNetCore.Localization;
 using NJsonSchema;
 using NSwag;
 using NSwag.Generation.Processors;
-using OpenApiExample = NSwag.OpenApiExample;
-using OpenApiParameter = NSwag.OpenApiParameter;
+using WebApi.Configurations;
 
 namespace WebApi;
 
@@ -86,7 +84,7 @@ public static class ServiceCollectionExtensions
                     settings.OperationProcessors.Add(acceptLanguageOperationProcessor);
                 };
                 options.EnableGetRequestsWithBody = documentOption.EnableGetRequestsWithBody;
-                options.EnableJWTBearerAuth = documentOption.EnableJWTBearerAuth;
+                options.EnableJWTBearerAuth = documentOption.EnableJwtBearerAuth;
                 options.ExcludeNonFastEndpoints = documentOption.ExcludeNonFastEndpoints;
                 options.FlattenSchema = documentOption.FlattenSchema;
                 options.MaxEndpointVersion = documentOption.MaxEndpointVersion;
