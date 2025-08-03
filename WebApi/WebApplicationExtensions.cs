@@ -13,9 +13,6 @@ public static class WebApplicationExtensions
     {
         var swaggerConfig = app.Services.GetRequiredService<IOptions<Swagger>>().Value;
 
-        if (app.Services.GetRequiredService<IWebHostEnvironment>().IsDevelopment() != swaggerConfig.IsDevelopment)
-            return app;
-
         app.UseSwaggerGen();
 
         app.MapScalarApiReference(options =>

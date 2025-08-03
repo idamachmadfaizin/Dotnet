@@ -4,7 +4,6 @@ using FastEndpoints.Swagger;
 using HealthChecks.ApplicationStatus.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
-using Microsoft.Extensions.Options;
 using NJsonSchema;
 using NSwag;
 using NSwag.Generation.Processors;
@@ -20,23 +19,24 @@ public static class ServiceCollectionExtensions
     {
         services
             .Configure<Auth>(configuration.GetSection(nameof(Auth)))
-            .Configure<IdentityOptions>(configuration.GetSection($"{nameof(Auth)}:{nameof(Auth.IdentityOptions)}"))
             .Configure<ConnectionStrings>(configuration.GetSection(nameof(ConnectionStrings)))
-            .Configure<Swagger>(configuration.GetSection(nameof(Swagger)))
-            .Configure<Localization>(configuration.GetSection(nameof(Localization)));
+            .Configure<Cors>(configuration.GetSection(nameof(Cors)))
+            .Configure<IdentityOptions>(configuration.GetSection($"{nameof(Auth)}:{nameof(Auth.IdentityOptions)}"))
+            .Configure<Localization>(configuration.GetSection(nameof(Localization)))
+            .Configure<Swagger>(configuration.GetSection(nameof(Swagger)));
 
         return services;
     }
 
-    public static IServiceCollection AddSwaggerDocuments(this IServiceCollection services)
+    public static IServiceCollection AddSwaggerDocuments(this IServiceCollection services,
+        ConfigurationManager configuration)
     {
-        using var provider = services.BuildServiceProvider();
-        var swaggerConfig = provider.GetRequiredService<IOptions<Swagger>>().Value;
+        var swagger = configuration.GetRequiredSection(nameof(Swagger)).Get<Swagger>();
+        ArgumentNullException.ThrowIfNull(swagger);
 
-        if (provider.GetRequiredService<IWebHostEnvironment>().IsDevelopment() != swaggerConfig.IsDevelopment)
-            return services;
+        var localization = configuration.GetRequiredSection(nameof(Localization)).Get<Localization>();
+        ArgumentNullException.ThrowIfNull(localization);
 
-        var localization = provider.GetRequiredService<IOptions<Localization>>().Value;
         var supportedCultures = localization.SupportedCultures.Count == 0
             ? [localization.DefaultCulture]
             : localization.SupportedCultures;
@@ -61,7 +61,7 @@ public static class ServiceCollectionExtensions
             return true;
         });
 
-        if (!swaggerConfig.DocumentOptions.Any())
+        if (!swagger.DocumentOptions.Any())
         {
             services.SwaggerDocument(options =>
             {
@@ -74,7 +74,7 @@ public static class ServiceCollectionExtensions
             return services;
         }
 
-        foreach (var documentOption in swaggerConfig.DocumentOptions)
+        foreach (var documentOption in swagger.DocumentOptions)
         {
             services.SwaggerDocument(options =>
             {
@@ -112,25 +112,26 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddLocalizationAndConfigure(this IServiceCollection services)
+    public static IServiceCollection AddLocalizationAndConfigure(this IServiceCollection services,
+        ConfigurationManager configuration)
     {
-        using var provider = services.BuildServiceProvider();
-        var localizationConfig = provider.GetRequiredService<IOptions<Localization>>().Value;
-        
+        var localization = configuration.GetRequiredSection(nameof(Localization)).Get<Localization>();
+        ArgumentNullException.ThrowIfNull(localization);
+
         services
             .AddLocalization(options => options.ResourcesPath = "Resources")
             .Configure<RequestLocalizationOptions>(options =>
             {
-                var supportedCultures = localizationConfig.SupportedCultures
+                var supportedCultures = localization.SupportedCultures
                     .Select(culture => new CultureInfo(culture))
                     .ToList();
 
                 if (supportedCultures.Count == 0)
                 {
-                    supportedCultures.Add(new CultureInfo(localizationConfig.DefaultCulture));
+                    supportedCultures.Add(new CultureInfo(localization.DefaultCulture));
                 }
 
-                options.DefaultRequestCulture = new RequestCulture(localizationConfig.DefaultCulture);
+                options.DefaultRequestCulture = new RequestCulture(localization.DefaultCulture);
                 options.SupportedCultures = supportedCultures;
                 options.SupportedUICultures = supportedCultures;
             });
@@ -138,16 +139,44 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddAppHealthChecks(this IServiceCollection services)
+    public static IServiceCollection AddAppHealthChecks(this IServiceCollection services,
+        ConfigurationManager configuration)
     {
-        using var provider = services.BuildServiceProvider();
-        var connectionStringsConfig = provider.GetRequiredService<IOptions<ConnectionStrings>>().Value;
-        
-        var connectionString = connectionStringsConfig.DefaultConnection;
+        var connectionStrings = configuration.GetRequiredSection(nameof(ConnectionStrings)).Get<ConnectionStrings>();
+        ArgumentNullException.ThrowIfNull(connectionStrings);
+
+        var defaultConnection = connectionStrings.DefaultConnection;
         services.AddHealthChecks()
             .AddApplicationStatus()
-            .AddSqlite(connectionString);
-        
+            .AddSqlite(defaultConnection);
+
+        return services;
+    }
+
+    public static IServiceCollection AddAppCors(this IServiceCollection services, ConfigurationManager configuration)
+    {
+        var cors = configuration.GetRequiredSection(nameof(Cors)).Get<Cors>();
+        ArgumentNullException.ThrowIfNull(cors);
+
+        services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+            {
+                var allowedOrigins = cors.AllowedOrigins;
+                var anyWildcard = allowedOrigins.Any(allowedOrigin => allowedOrigin.Trim() == "*");
+
+                var policyBuilder = anyWildcard
+                    ? policy.AllowAnyOrigin()
+                    : policy.WithOrigins(allowedOrigins.ToArray()).AllowCredentials();
+
+                policyBuilder
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .SetPreflightMaxAge(
+                        TimeSpan.FromMinutes(cors.PreflightMaxAgeMinutes)); // Cache preflight for 10 minutes
+            });
+        });
+
         return services;
     }
 }

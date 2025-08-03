@@ -1,4 +1,3 @@
-using System.Text.Json;
 using FastEndpoints.Swagger;
 using NSwag.Generation.AspNetCore;
 
@@ -6,7 +5,6 @@ namespace Configurations;
 
 public class Swagger
 {
-    public required bool IsDevelopment { get; init; } = true;
     public required IList<DocumentOption> DocumentOptions { get; init; } = [];
 }
 

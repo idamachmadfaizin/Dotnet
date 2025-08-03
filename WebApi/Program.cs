@@ -26,25 +26,31 @@ try
         .AddConfigurations(builder.Configuration)
         .AddAuthenticationJwtBearer(o =>
         {
-            var signingKey = builder.Configuration[$"{nameof(Auth)}:{nameof(Auth.SigningKey)}"];
+            var signingKey = builder.Configuration.GetRequiredSection(nameof(Auth)).Get<Auth>()?.SigningKey;
             ArgumentException.ThrowIfNullOrWhiteSpace(signingKey);
             o.SigningKey = signingKey;
         })
         .AddAuthorization()
         .AddFastEndpoints()
-        .AddSwaggerDocuments()
         .AddResponseCaching()
-        .AddLocalizationAndConfigure()
+        .AddLocalizationAndConfigure(builder.Configuration)
+        .AddAppCors(builder.Configuration)
+        .AddAppHealthChecks(builder.Configuration)
         .AddDbContext<AppDbContext>()
-        .AddAppHealthChecks()
         .AddIdentityApiEndpoints<User>()
         .AddEntityFrameworkStores<AppDbContext>();
+
+    if (builder.Environment.IsDevelopment())
+    {
+        builder.Services.AddSwaggerDocuments(builder.Configuration);
+    }
 
     var app = builder.Build();
 
     app.UseRequestLocalization()
         .UseDefaultExceptionHandler()
-        .UseHttpsRedirection();
+        .UseHttpsRedirection()
+        .UseCors();
     if (app.Environment.IsDevelopment())
     {
         app.UseHsts();
